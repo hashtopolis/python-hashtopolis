@@ -52,7 +52,7 @@ class HashtopolisError(Exception):
 class HashtopolisConfig(object):
     def __init__(self):
         # Request access TOKEN, used throughout the test
-        load_order = (str(Path(__file__).parent.joinpath('{name}-defaults{suffix}')),) \
+        load_order = (str(Path.cwd().joinpath('{name}-defaults{suffix}')),) \
                      + confidence.DEFAULT_LOAD_ORDER
         self._cfg = confidence.load_name('hashtopolis-test', load_order=load_order, format=confidence.YAML())
         self._hashtopolis_uri = self._cfg['hashtopolis_uri']
