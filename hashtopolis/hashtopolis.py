@@ -1038,12 +1038,20 @@ class Helper(HashtopolisConnector):
         }
         return self._helper_get_request_file("getFile", payload, range)
 
+    def rebuild_chunk_cache(self):
+        response = self._helper_request("rebuildChunkCache", {})
+        return response['meta']
+
     def recount_file_lines(self, file):
         payload = {
             'fileId': file.id,
         }
         response = self._helper_request("recountFileLines", payload)
         return File(**response['meta'])
+
+    def rescan_global_files(self):
+        response = self._helper_request("rescanGlobalFiles", {})
+        return response['meta']
 
     def unassign_agent(self, agent):
         payload = {
