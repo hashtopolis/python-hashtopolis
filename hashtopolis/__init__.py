@@ -10,11 +10,13 @@ from .hashtopolis import (
   ObjectDoesNotExist,
   MultipleObjectsReturned,
   ModelBase,
-  Model
+  Model,
+  Helper
 )
 
 # models
 from .hashtopolis import (
+  ApiToken,
   AccessGroup,
   Agent,
   AgentStat,

@@ -60,6 +60,16 @@ class HashtopolisConfig(object):
         self.username = self._cfg['username']
         self.password = self._cfg['password']
 
+    @classmethod
+    def with_credentials(cls, uri, username, password):
+        """Create a config with explicit credentials instead of reading from a config file."""
+        config = cls.__new__(cls)
+        config._hashtopolis_uri = uri
+        config._api_endpoint = uri + '/api/v2'
+        config.username = username
+        config.password = password
+        return config
+
 
 class HashtopolisResponseError(HashtopolisError):
     pass
@@ -760,6 +770,10 @@ class Model(metaclass=ModelBase):
 ##
 # Begin of API objects
 #
+class ApiToken(Model, uri="/ui/apiTokens"):
+    pass
+
+
 class AccessGroup(Model, uri="/ui/accessgroups"):
     pass
 
