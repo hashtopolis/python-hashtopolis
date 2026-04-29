@@ -229,7 +229,7 @@ class HashtopolisConnector(object):
 
     # todo refactor start_offset into page variable
     def filter(self, include, ordering, filter, start_offset, auth=None):
-        self.authenticate()
+        self.authenticate(auth=auth)
         headers = self._headers
 
         after_dict = {"primary": {"id": start_offset}}
