@@ -116,13 +116,16 @@ class HashtopolisConnector(object):
         self._hashtopolis_uri = config._hashtopolis_uri
         self.config = config
 
-    def authenticate(self):
+    def authenticate(self, auth=None):
         if self._api_endpoint not in HashtopolisConnector.token:
             # Request access TOKEN, used throughout the test
 
             logger.info("Start authentication")
             auth_uri = self._api_endpoint + '/auth/token'
-            auth = (self.config.username, self.config.password)
+            if auth is not None:
+                auth = auth
+            else:
+                auth = (self.config.username, self.config.password)
             r = requests.post(auth_uri, auth=auth)
             self.validate_status_code(r, [201], "Authentication failed")
 
@@ -225,7 +228,7 @@ class HashtopolisConnector(object):
         return response["data"]
 
     # todo refactor start_offset into page variable
-    def filter(self, include, ordering, filter, start_offset):
+    def filter(self, include, ordering, filter, start_offset, auth=None):
         self.authenticate()
         headers = self._headers
 
@@ -404,12 +407,13 @@ class HashtopolisConnector(object):
 
 # Build Django ORM style django.query interface
 class QuerySet():
-    def __init__(self, cls, include=None, ordering=None, filters=None, pages=None):
+    def __init__(self, cls, include=None, ordering=None, filters=None, pages=None, auth=None):
         self.cls = cls
         self.include = include
         self.ordering = ordering
         self.filters = filters
         self.pages = pages
+        self.auth = auth
 
     def __iter__(self):
         yield from self.__getitem__(slice(None, None, 1))
@@ -441,7 +445,7 @@ class QuerySet():
                 filters['id'] = filters['pk']
                 del filters['pk']
 
-        filter_generator = self.cls.get_conn().filter(self.include, self.ordering, filters, start_offset=cursor)
+        filter_generator = self.cls.get_conn().filter(self.include, self.ordering, filters, start_offset=cursor, auth=self.auth)
 
         while index < stop:
             # Fetch new entries in chunks default to server
@@ -479,6 +483,9 @@ class QuerySet():
     def all(self):
         # yield from self
         return self
+    
+    def auth(self, username=None, password=None):
+        self.auth = (username, password)
 
     def get(self, **filters):
         if filters:
