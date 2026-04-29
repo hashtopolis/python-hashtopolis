@@ -484,8 +484,9 @@ class QuerySet():
         # yield from self
         return self
     
-    def auth(self, username=None, password=None):
+    def authenticate(self, username=None, password=None):
         self.auth = (username, password)
+        return self
 
     def get(self, **filters):
         if filters:
