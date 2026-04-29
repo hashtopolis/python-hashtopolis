@@ -117,24 +117,25 @@ class HashtopolisConnector(object):
         self.config = config
 
     def authenticate(self, auth=None):
-        if self._api_endpoint not in HashtopolisConnector.token:
-            # Request access TOKEN, used throughout the test
-
-            logger.info("Start authentication")
+        if auth is not None:
+            logger.info("Start authentication with provided credentials")
             auth_uri = self._api_endpoint + '/auth/token'
-            if auth is not None:
-                auth = auth
-            else:
-                auth = (self.config.username, self.config.password)
             r = requests.post(auth_uri, auth=auth)
             self.validate_status_code(r, [201], "Authentication failed")
-
             r_json = self.resp_to_json(r)
-            HashtopolisConnector.token[self._api_endpoint] = r_json['token']
-            HashtopolisConnector.token_expires[self._api_endpoint] = r_json['token']
-
-        self._token = HashtopolisConnector.token[self._api_endpoint]
-        self._token_expires = HashtopolisConnector.token_expires[self._api_endpoint]
+            self._token = r_json['token']
+            self._token_expires = r_json['token']
+        else:
+            if self._api_endpoint not in HashtopolisConnector.token:
+                logger.info("Start authentication")
+                auth_uri = self._api_endpoint + '/auth/token'
+                r = requests.post(auth_uri, auth=(self.config.username, self.config.password))
+                self.validate_status_code(r, [201], "Authentication failed")
+                r_json = self.resp_to_json(r)
+                HashtopolisConnector.token[self._api_endpoint] = r_json['token']
+                HashtopolisConnector.token_expires[self._api_endpoint] = r_json['token']
+            self._token = HashtopolisConnector.token[self._api_endpoint]
+            self._token_expires = HashtopolisConnector.token_expires[self._api_endpoint]
 
         self._headers = {
             'Authorization': 'Bearer ' + self._token
