@@ -41,7 +41,6 @@ from .hashtopolis import (
   Task,
   TaskWrapper,
   TaskWrapperDisplay,
-  TaskWrapperDisplay2,
   User,
   Voucher
 )
@@ -49,6 +48,7 @@ from .hashtopolis import (
 # action utilities
 from .hashtopolis import (
   FileImport,
+  TaskWrapperDisplayTwo,
   Meta,
   Helper
 )
