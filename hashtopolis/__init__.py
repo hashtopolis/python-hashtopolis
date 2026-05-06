@@ -43,7 +43,7 @@ from .hashtopolis import (
   TaskWrapperDisplay,
   User,
   Voucher,
-  DisplayTest
+  TaskWrapperDisplayHelper
 )
 
 # action utilities
