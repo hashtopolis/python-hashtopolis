@@ -41,6 +41,7 @@ from .hashtopolis import (
   Task,
   TaskWrapper,
   TaskWrapperDisplay,
+  TaskWrapperDisplay2,
   User,
   Voucher
 )
