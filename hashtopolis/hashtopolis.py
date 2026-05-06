@@ -1071,3 +1071,11 @@ class Helper(HashtopolisConnector):
         }
         response = self._helper_request("assignAgent", payload)
         return response['meta']
+    
+class TaskWrapperDisplayHelper(HashtopolisConnector):
+    def __init__(self):
+        super().__init__("/helper/taskWrapperDisplay/", HashtopolisConfig())
+    def get_task_wrapper_display(self):
+        self.authenticate()
+        value = requests.get(self._api_endpoint + self._model_uri, headers=self._headers)
+        return value

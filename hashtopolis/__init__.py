@@ -49,5 +49,6 @@ from .hashtopolis import (
 from .hashtopolis import (
   FileImport,
   Meta,
-  Helper
+  Helper,
+  TaskWrapperDisplayHelper
 )
