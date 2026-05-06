@@ -42,13 +42,13 @@ from .hashtopolis import (
   TaskWrapper,
   TaskWrapperDisplay,
   User,
-  Voucher
+  Voucher,
+  TestDisp
 )
 
 # action utilities
 from .hashtopolis import (
   FileImport,
   Meta,
-  Helper,
-  TaskWrapperDisplayHelper
+  Helper
 )
