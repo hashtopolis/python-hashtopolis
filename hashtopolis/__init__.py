@@ -40,6 +40,7 @@ from .hashtopolis import (
   Supertask,
   Task,
   TaskWrapper,
+  TaskWrapperDisplay,
   User,
   Voucher
 )
