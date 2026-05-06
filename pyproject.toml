@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hashtopolis-pylib"
-version = "0.1.0.0"
+version = "0.1.0"
 description = "Python implementation to be used to talk to the API of Hashtopolis."
 readme = "README.md"
 license = {text = "GPL-3.0"}
