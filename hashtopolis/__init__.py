@@ -10,8 +10,7 @@ from .hashtopolis import (
   ObjectDoesNotExist,
   MultipleObjectsReturned,
   ModelBase,
-  Model,
-  Helper
+  Model
 )
 
 # models

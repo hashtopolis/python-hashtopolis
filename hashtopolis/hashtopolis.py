@@ -117,6 +117,14 @@ class HashtopolisConnector(object):
         self.config = config
 
     def authenticate(self, auth=None):
+        """
+        Authenticate with the API and store the token for future requests.
+
+        Args:
+            auth: Authentication object understood by requests, typically a
+                ``(username, password)`` tuple. Is only used for one off authentication
+                that differ from the config. This authentication is not cached.
+        """
         if auth is not None:
             logger.info("Start authentication with provided credentials")
             auth_uri = self._api_endpoint + '/auth/token'
@@ -204,9 +212,9 @@ class HashtopolisConnector(object):
         # query_params = urllib.parse.parse_qs(urllib.parse.urlparse(links["last"]).query)
         # TODO not really a straightforward way to validate the last link
 
-    def get_single_page(self, page, filter):
+    def get_single_page(self, page, filter, auth=None):
         """Gets a single page by using the page parameters"""
-        self.authenticate()
+        self.authenticate(auth=auth)
         headers = self._headers
         request_uri = self._api_endpoint + self._model_uri
         payload = {}
@@ -267,8 +275,8 @@ class HashtopolisConnector(object):
                 break
             request_uri = response['links']['next']
 
-    def get_one(self, pk, include):
-        self.authenticate()
+    def get_one(self, pk, include, auth=None):
+        self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri + f'/{pk}'
         headers = self._headers
 
@@ -280,8 +288,8 @@ class HashtopolisConnector(object):
         self.validate_status_code(r, [200], "Get single object failed")
         return self.resp_to_json(r)
 
-    def delete_many(self, objects):
-        self.authenticate()
+    def delete_many(self, objects, auth=None):
+        self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri
         headers = self._headers
         headers['Content-Type'] = 'application/json'
@@ -296,7 +304,7 @@ class HashtopolisConnector(object):
         r = requests.delete(uri, headers=headers, data=json.dumps(payload))
         self.validate_status_code(r, [204], "deleting failed")
 
-    def patch_many(self, objects, attributes, field):
+    def patch_many(self, objects, attributes, field, auth=None):
         """
         Used to test PATCH many endpoint.
 
@@ -307,7 +315,7 @@ class HashtopolisConnector(object):
             patched with attributes[0] on the set field
         """
         assert len(objects) == len(attributes)
-        self.authenticate()
+        self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri
         headers = self._headers
         headers['Content-Type'] = 'application/json'
@@ -316,12 +324,12 @@ class HashtopolisConnector(object):
         r = requests.patch(uri, headers=headers, data=json.dumps(payload))
         self.validate_status_code(r, [200], "Patching failed")
 
-    def patch_one(self, obj):
+    def patch_one(self, obj, auth=None):
         if not obj.has_changed():
             logger.debug("Object '%s' has not changed, no PATCH required", obj)
             return
 
-        self.authenticate()
+        self.authenticate(auth=auth)
         uri = self._hashtopolis_uri + obj.uri
         headers = self._headers
         headers['Content-Type'] = 'application/json'
@@ -339,15 +347,15 @@ class HashtopolisConnector(object):
         # TODO: Validate if return objects matches digital twin
         obj.set_initial(self.resp_to_json(r)['data'].copy())
 
-    def send_patch(self, uri, data):
-        self.authenticate()
+    def send_patch(self, uri, data, auth=None):
+        self.authenticate(auth=auth)
         headers = self._headers
         headers['Content-Type'] = 'application/json'
         logger.debug("Sending PATCH payload: %s to %s", json.dumps(data), uri)
         r = requests.patch(uri, headers=headers, data=json.dumps(data))
         self.validate_status_code(r, [204], "Patching failed")
 
-    def patch_to_many_relationships(self, obj):
+    def patch_to_many_relationships(self, obj, auth=None):
         for k, v in obj.diff_includes().items():
             attributes = []
             logger.debug("Going to patch object '%s' property '%s' from '%s' to '%s'", obj, k, v[0], v[1])
@@ -355,13 +363,13 @@ class HashtopolisConnector(object):
                 attributes.append({"type": k, "id": include_id})
             data = {"data": attributes}
             uri = self._hashtopolis_uri + obj.uri + "/relationships/" + k
-            self.send_patch(uri, data)
+            self.send_patch(uri, data, auth=auth)
 
-    def create(self, obj):
+    def create(self, obj, auth=None):
         # Check if object to be created is new
         assert obj._new_model is True
 
-        self.authenticate()
+        self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri
         headers = self._headers
         headers['Content-Type'] = 'application/json'
@@ -376,12 +384,12 @@ class HashtopolisConnector(object):
         # TODO: Validate if return objects matches digital twin
         obj.set_initial(self.resp_to_json(r)['data'].copy())
 
-    def delete(self, obj):
+    def delete(self, obj, auth=None):
         """ Delete object from database """
         # TODO: Check if object to be deleted actually exists
         assert obj._new_model is False
 
-        self.authenticate()
+        self.authenticate(auth=auth)
         uri = self._hashtopolis_uri + obj.uri
         headers = self._headers
         payload = {}
@@ -391,8 +399,8 @@ class HashtopolisConnector(object):
 
         # TODO: Cleanup object to allow re-creation
 
-    def count(self, filter):
-        self.authenticate()
+    def count(self, filter, auth=None):
+        self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri + "/count"
         headers = self._headers
         payload = {}
