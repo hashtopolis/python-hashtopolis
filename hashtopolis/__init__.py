@@ -15,6 +15,7 @@ from .hashtopolis import (
 
 # models
 from .hashtopolis import (
+  ApiToken,
   AccessGroup,
   Agent,
   AgentStat,
