@@ -1072,7 +1072,7 @@ class Helper(HashtopolisConnector):
         response = self._helper_request("assignAgent", payload)
         return response['meta']
     
-class TaskWrapperDisplayHelperNameTEst(HashtopolisConnector):
+class TaskWrapperDisplayHelper(HashtopolisConnector):
     def __init__(self):
         super().__init__("/ui/taskwrapperdisplays", HashtopolisConfig())
 
