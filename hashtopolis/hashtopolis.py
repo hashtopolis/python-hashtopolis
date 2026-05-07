@@ -1071,14 +1071,3 @@ class Helper(HashtopolisConnector):
         }
         response = self._helper_request("assignAgent", payload)
         return response['meta']
-    
-class TaskWrapperDisplayHelper(HashtopolisConnector):
-    def __init__(self):
-        super().__init__("/ui/taskwrapperdisplays", HashtopolisConfig())
-
-    def get_task_wrapper_display(self):
-        self.authenticate()
-        uri = self._api_endpoint + self._model_uri
-        r = requests.get(uri, headers=self._headers)
-        self.validate_status_code(r, [200], "Unable to retrieve taskwrapperdisplays definitions")
-        return self.resp_to_json(r)
