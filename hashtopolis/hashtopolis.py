@@ -893,6 +893,8 @@ class Task(Model, uri="/ui/tasks"):
 class TaskWrapper(Model, uri="/ui/taskwrappers"):
     pass
 
+class TaskWrapperDisplay(Model, uri="/ui/taskwrapperdisplays"):
+    pass
 
 class User(Model, uri="/ui/users"):
     pass
