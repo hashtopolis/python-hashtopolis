@@ -1073,6 +1073,13 @@ class Helper(HashtopolisConnector):
         }
         return self._helper_get_request_file("getFile", payload, range)
 
+    def get_cracks_per_day(self):
+        self.authenticate()
+        uri = self._api_endpoint + self._model_uri + 'getCracksPerDay'
+        r = requests.get(uri, headers=self._headers)
+        self.validate_status_code(r, [200], "getCracksPerDay failed")
+        return r.json()
+
     def rebuild_chunk_cache(self):
         response = self._helper_request("rebuildChunkCache", {})
         return response['meta']
