@@ -212,7 +212,7 @@ class HashtopolisConnector(object):
         # query_params = urllib.parse.parse_qs(urllib.parse.urlparse(links["last"]).query)
         # TODO not really a straightforward way to validate the last link
 
-    def get_single_page(self, page, filter, auth=None):
+    def get_single_page(self, page, filter, extra_params=None, auth=None):
         """Gets a single page by using the page parameters"""
         self.authenticate(auth=auth)
         headers = self._headers
@@ -224,6 +224,9 @@ class HashtopolisConnector(object):
         if filter:
             for k, v in filter.items():
                 payload[f"filter[{k}]"] = v
+        if extra_params:
+            for k, v in extra_params.items():
+                payload[k] = v
 
         request_uri = self._api_endpoint + self._model_uri + '?' + urllib.parse.urlencode(payload)
         r = requests.get(request_uri, headers=headers)
@@ -237,7 +240,7 @@ class HashtopolisConnector(object):
         return response["data"]
 
     # todo refactor start_offset into page variable
-    def filter(self, include, ordering, filter, start_offset, auth=None):
+    def filter(self, include, ordering, filter, start_offset, extra_params=None, auth=None):
         self.authenticate(auth=auth)
         headers = self._headers
 
@@ -245,7 +248,7 @@ class HashtopolisConnector(object):
         after_param = b64encode(json.dumps(after_dict).encode('utf-8')).decode('utf-8')
 
         payload = {}
-        if (start_offset):
+        if start_offset is not None:
             payload['page[after]'] = after_param
         if filter:
             for k, v in filter.items():
@@ -255,6 +258,9 @@ class HashtopolisConnector(object):
             payload['include'] = ','.join(include) if type(include) in (list, tuple) else include
         if ordering:
             payload['sort'] = ','.join(ordering) if type(ordering) in (list, tuple) else ordering
+        if extra_params:
+            for k, v in extra_params.items():
+                payload[k] = v
 
         request_uri = self._api_endpoint + self._model_uri + '?' + urllib.parse.urlencode(payload)
         while True:
@@ -275,7 +281,7 @@ class HashtopolisConnector(object):
                 break
             request_uri = response['links']['next']
 
-    def get_one(self, pk, include, auth=None):
+    def get_one(self, pk, include, extra_params=None, auth=None):
         self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri + f'/{pk}'
         headers = self._headers
@@ -283,8 +289,11 @@ class HashtopolisConnector(object):
         payload = {}
         if include is not None:
             payload['include'] = ','.join(include) if type(include) in (list, tuple) else include
+        if extra_params:
+            for k, v in extra_params.items():
+                payload[k] = v
 
-        r = requests.get(uri, headers=headers, data=payload)
+        r = requests.get(uri, headers=headers, params=payload)
         self.validate_status_code(r, [200], "Get single object failed")
         return self.resp_to_json(r)
 
@@ -399,7 +408,7 @@ class HashtopolisConnector(object):
 
         # TODO: Cleanup object to allow re-creation
 
-    def count(self, filter, auth=None):
+    def count(self, filter, extra_params=None, auth=None):
         self.authenticate(auth=auth)
         uri = self._api_endpoint + self._model_uri + "/count"
         headers = self._headers
@@ -407,6 +416,9 @@ class HashtopolisConnector(object):
         if filter:
             for k, v in filter.items():
                 payload[f"filter[{k}]"] = v
+        if extra_params:
+            for k, v in extra_params.items():
+                payload[k] = v
 
         logger.debug("Sending GET payload: %s to %s", json.dumps(payload), uri)
         r = requests.get(uri, headers=headers, params=payload)
@@ -416,12 +428,13 @@ class HashtopolisConnector(object):
 
 # Build Django ORM style django.query interface
 class QuerySet():
-    def __init__(self, cls, include=None, ordering=None, filters=None, pages=None, auth=None):
+    def __init__(self, cls, include=None, ordering=None, filters=None, pages=None, extra_params=None, auth=None):
         self.cls = cls
         self.include = include
         self.ordering = ordering
         self.filters = filters
         self.pages = pages
+        self.extra_params = extra_params
         self.auth = auth
 
     def __iter__(self):
@@ -435,7 +448,7 @@ class QuerySet():
             return self.filter_(k.start or 0, k.stop or sys.maxsize, k.step or 1)
 
     def get_pagination(self):
-        objs = self.cls.get_conn().get_single_page(self.pages, self.filters)
+        objs = self.cls.get_conn().get_single_page(self.pages, self.filters, extra_params=self.extra_params)
         parsed_objs = []
         for obj in objs:
             parsed_objs.append(self.cls._model(**obj))
@@ -454,7 +467,7 @@ class QuerySet():
                 filters['id'] = filters['pk']
                 del filters['pk']
 
-        filter_generator = self.cls.get_conn().filter(self.include, self.ordering, filters, start_offset=cursor, auth=self.auth)
+        filter_generator = self.cls.get_conn().filter(self.include, self.ordering, filters, start_offset=cursor, extra_params=self.extra_params, auth=self.auth)
 
         while index < stop:
             # Fetch new entries in chunks default to server
@@ -487,6 +500,10 @@ class QuerySet():
 
     def page(self, **pages):
         self.pages = pages
+        return self
+
+    def params(self, **kwargs):
+        self.extra_params = kwargs
         return self
 
     def all(self):
@@ -569,12 +586,16 @@ class ManagerBase(type):
         return cls.all()[0]
 
     @classmethod
+    def params(cls, **kwargs):
+        return QuerySet(cls, extra_params=kwargs)
+
+    @classmethod
     def get(cls, **filters):
         return QuerySet(cls, filters=filters).get()
 
     @classmethod
-    def count(cls, **filters):
-        return cls.get_conn().count(filter=filters)
+    def count(cls, extra_params=None, **filters):
+        return cls.get_conn().count(filter=filters, extra_params=extra_params)
 
     @classmethod
     def paginate(cls, **pages):
