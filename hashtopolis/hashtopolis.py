@@ -248,7 +248,7 @@ class HashtopolisConnector(object):
         after_param = b64encode(json.dumps(after_dict).encode('utf-8')).decode('utf-8')
 
         payload = {}
-        if start_offset is not None:
+        if start_offset:
             payload['page[after]'] = after_param
         if filter:
             for k, v in filter.items():
