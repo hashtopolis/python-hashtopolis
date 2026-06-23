@@ -212,7 +212,7 @@ class HashtopolisConnector(object):
         # query_params = urllib.parse.parse_qs(urllib.parse.urlparse(links["last"]).query)
         # TODO not really a straightforward way to validate the last link
 
-    def get_single_page(self, page, filter, extra_params=None, auth=None):
+    def get_single_page(self, page, filter, extra_params=None, ordering=None, auth=None):
         """Gets a single page by using the page parameters"""
         self.authenticate(auth=auth)
         headers = self._headers
@@ -227,6 +227,8 @@ class HashtopolisConnector(object):
         if extra_params:
             for k, v in extra_params.items():
                 payload[k] = v
+        if ordering:
+            payload['sort'] = ','.join(ordering) if type(ordering) in (list, tuple) else ordering
 
         request_uri = self._api_endpoint + self._model_uri + '?' + urllib.parse.urlencode(payload)
         r = requests.get(request_uri, headers=headers)
@@ -448,7 +450,7 @@ class QuerySet():
             return self.filter_(k.start or 0, k.stop or sys.maxsize, k.step or 1)
 
     def get_pagination(self):
-        objs = self.cls.get_conn().get_single_page(self.pages, self.filters, extra_params=self.extra_params)
+        objs = self.cls.get_conn().get_single_page(self.pages, self.filters, extra_params=self.extra_params, ordering=self.ordering)
         parsed_objs = []
         for obj in objs:
             parsed_objs.append(self.cls._model(**obj))
