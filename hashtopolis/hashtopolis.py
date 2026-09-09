@@ -1101,14 +1101,14 @@ class Helper(HashtopolisConnector):
         uri = self._api_endpoint + self._model_uri + 'getCracksPerDay'
         r = requests.get(uri, headers=self._headers)
         self.validate_status_code(r, [200], "getCracksPerDay failed")
-        return r.json()['meta']
+        return r.json()['data']
 
     def get_completed_count(self):
         self.authenticate()
         uri = self._api_endpoint + self._model_uri + 'getCompletedCount'
         r = requests.get(uri, headers=self._headers)
         self.validate_status_code(r, [200], "getCompletedCount failed")
-        return r.json()['meta']
+        return r.json()['data']
 
     def get_global_config(self):
         self.authenticate()
@@ -1127,7 +1127,7 @@ class Helper(HashtopolisConnector):
             'fileId': file.id,
         }
         response = self._helper_request("recountFileLines", payload)
-        return File(**response['data'])
+        return File(**response['meta'])
 
     def rescan_global_files(self):
         response = self._helper_request("rescanGlobalFiles", {})
