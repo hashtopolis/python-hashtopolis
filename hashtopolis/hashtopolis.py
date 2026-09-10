@@ -57,19 +57,38 @@ class HashtopolisConfig(object):
         self._cfg = confidence.load_name('hashtopolis-test', load_order=load_order, format=confidence.YAML())
         self._hashtopolis_uri = self._cfg['hashtopolis_uri']
         self._api_endpoint = self._hashtopolis_uri + '/api/v2'
-        self.username = self._cfg['username']
-        self.password = self._cfg['password']
+        if 'token' in self._cfg:
+            self.token = self._cfg['token']
+            self.username = None
+            self.password = None
+        elif all(key in self._cfg for key in ('username', 'password')):
+            self.username = self._cfg['username']
+            self.password = self._cfg['password']
+            self.token = None
+        else:
+            logger.error('Either an API token or a username and password need to be present in the configuration file!')
 
     @classmethod
     def with_credentials(cls, uri, username, password):
-        """Create a config with explicit credentials instead of reading from a config file."""
+        """Create a config with explicit user/pass instead of reading from a config file."""
         config = cls.__new__(cls)
         config._hashtopolis_uri = uri
         config._api_endpoint = uri + '/api/v2'
         config.username = username
         config.password = password
+        config.token = None
         return config
 
+    @classmethod
+    def with_token(cls, uri, token):
+        """Create a config with explicit API token instead of reading from a config file."""
+        config = cls.__new__(cls)
+        config._hashtopolis_uri = uri
+        config._api_endpoint = uri + '/api/v2'
+        config.username = None
+        config.password = None
+        config.token = token
+        return config
 
 class HashtopolisResponseError(HashtopolisError):
     pass
@@ -126,24 +145,34 @@ class HashtopolisConnector(object):
                 that differ from the config. This authentication is not cached.
         """
         if auth is not None:
-            logger.info("Start authentication with provided credentials")
-            auth_uri = self._api_endpoint + '/auth/token'
-            r = requests.post(auth_uri, auth=auth)
-            self.validate_status_code(r, [201], "Authentication failed")
-            r_json = self.resp_to_json(r)
-            self._token = r_json['token']
-            self._token_expires = r_json['token']
-        else:
-            if self._api_endpoint not in HashtopolisConnector.token:
-                logger.info("Start authentication")
+            if isinstance(auth, str):
+                # Authenticate with token
+                logger.info("Start authentication with provided API token")
+                self._token = auth
+                # Ideally we would want some sort of validation here, to check if the token is correct.
+            else:
+                # Assume authentication object passed is ('user', 'password')
+                logger.info("Start authentication with provided username and password")
                 auth_uri = self._api_endpoint + '/auth/token'
-                r = requests.post(auth_uri, auth=(self.config.username, self.config.password))
+                r = requests.post(auth_uri, auth=auth)
                 self.validate_status_code(r, [201], "Authentication failed")
                 r_json = self.resp_to_json(r)
-                HashtopolisConnector.token[self._api_endpoint] = r_json['token']
-                HashtopolisConnector.token_expires[self._api_endpoint] = r_json['token']
-            self._token = HashtopolisConnector.token[self._api_endpoint]
-            self._token_expires = HashtopolisConnector.token_expires[self._api_endpoint]
+                self._token = r_json['token']
+                self._token_expires = r_json['token']
+        else:
+            if self.config.token is not None:
+                self._token = self.config.token
+            else:
+                if self._api_endpoint not in HashtopolisConnector.token:
+                    logger.info("Start authentication")
+                    auth_uri = self._api_endpoint + '/auth/token'
+                    r = requests.post(auth_uri, auth=(self.config.username, self.config.password))
+                    self.validate_status_code(r, [201], "Authentication failed")
+                    r_json = self.resp_to_json(r)
+                    HashtopolisConnector.token[self._api_endpoint] = r_json['token']
+                    HashtopolisConnector.token_expires[self._api_endpoint] = r_json['token']
+                self._token = HashtopolisConnector.token[self._api_endpoint]
+                self._token_expires = HashtopolisConnector.token_expires[self._api_endpoint]
 
         self._headers = {
             'Authorization': 'Bearer ' + self._token
