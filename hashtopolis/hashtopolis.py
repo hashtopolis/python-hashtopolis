@@ -162,6 +162,7 @@ class HashtopolisConnector(object):
         else:
             if self.config.token is not None:
                 self._token = self.config.token
+                HashtopolisConnector.token[self._api_endpoint] = self._token
             else:
                 if self._api_endpoint not in HashtopolisConnector.token:
                     logger.info("Start authentication")
