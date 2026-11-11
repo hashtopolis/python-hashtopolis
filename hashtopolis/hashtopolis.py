@@ -961,8 +961,8 @@ class Voucher(Model, uri="/ui/vouchers"):
 
 
 class FileImport(HashtopolisConnector):
-    def __init__(self):
-        super().__init__("/helper/importFile", HashtopolisConfig())
+    def __init__(self, config=None):
+        super().__init__("/helper/importFile", HashtopolisConfig() if config is None else config)
 
     def __repr__(self):
         return self._self
@@ -993,8 +993,8 @@ class FileImport(HashtopolisConnector):
 
 
 class Meta(HashtopolisConnector):
-    def __init__(self):
-        super().__init__("/openapi.json", HashtopolisConfig())
+    def __init__(self, config=None):
+        super().__init__("/openapi.json", HashtopolisConfig() if config is None else config)
 
     def get_meta(self):
         self.authenticate()
@@ -1005,8 +1005,8 @@ class Meta(HashtopolisConnector):
 
 
 class Helper(HashtopolisConnector):
-    def __init__(self):
-        super().__init__("/helper/", HashtopolisConfig())
+    def __init__(self, config=None):
+        super().__init__("/helper/", HashtopolisConfig() if config is None else config)
 
     def _helper_request(self, helper_uri, payload):
         self.authenticate()
