@@ -1148,6 +1148,20 @@ class Helper(HashtopolisConnector):
         data = r.json()['data']
         return [Config(**item) for item in data]
 
+    def get_notification_actions(self):
+        self.authenticate()
+        uri = self._api_endpoint + self._model_uri + 'getNotificationActions'
+        r = requests.get(uri, headers=self._headers)
+        self.validate_status_code(r, [200], "getNotificationActions failed")
+        return r.json()['meta']['actions']
+
+    def get_notification_channels(self):
+        self.authenticate()
+        uri = self._api_endpoint + self._model_uri + 'getNotificationChannels'
+        r = requests.get(uri, headers=self._headers)
+        self.validate_status_code(r, [200], "getNotificationChannels failed")
+        return r.json()['meta']['channels']
+
     def rebuild_chunk_cache(self):
         response = self._helper_request("rebuildChunkCache", {})
         return response['meta']
